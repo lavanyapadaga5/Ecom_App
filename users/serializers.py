@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Profile
+from .models import Address, Profile
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,3 +26,13 @@ class RegisterSerializer(serializers.ModelSerializer):
             "message": "User created successfully",
             "user": UserSerializer(user).data
         }
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = '__all__'
+        read_only_fields = ['user']
