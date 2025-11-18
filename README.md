@@ -1,1 +1,1 @@
-# Ecom_App
+This project is a fully working e-commerce backend built using Django REST Framework, handling authentication, products, cart, wishlist, addresses, orders, and online shopping workflows end-to-end.# Ecom_App
