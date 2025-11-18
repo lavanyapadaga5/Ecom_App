@@ -4,8 +4,9 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, UserSerializer
-
+from .serializers import RegisterSerializer, UserSerializer, ChangePasswordSerializer
+from .models import Address
+from .serializers import AddressSerializer
 
 # Register new users
 class RegisterView(generics.CreateAPIView):
@@ -90,3 +91,54 @@ class UpdateProfile(APIView):
         user.save()
 
         return Response({"message": "Profile updated successfully"})
+    
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            old_password = serializer.validated_data.get("old_password")
+            new_password = serializer.validated_data.get("new_password")
+
+            user = request.user
+
+            # Check if old password matches
+            if not user.check_password(old_password):
+                return Response(
+                    {"error": "Old password is incorrect"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Set new password
+            user.set_password(new_password)
+            user.save()
+
+            return Response(
+                {"message": "Password changed successfully"},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class AddAddressView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = AddressSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response({"message": "Address added successfully"}, status=201)
+
+        return Response(serializer.errors, status=400)
+
+class AddressListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        addresses = Address.objects.filter(user=request.user)
+        serializer = AddressSerializer(addresses, many=True)
+        return Response(serializer.data, status=200)
